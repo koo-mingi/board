@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- 비정상적인 접근 시 동작하는 핸들러 -->
+	<bean id="deniedHandler" class="com.spring.handler.CustomAccessDeniedHandler"></bean>
+	<!-- 로그인 성공 시 동작하는 핸들러 : 로그인 성공하면 원하는 곳으로 이동 -->
+	<bean id="loginSuccessHandler" class="com.spring.handler.CustomLoginSuccessHandler"/>
+	<!-- 비밀번호 암호화 객체 -->
+	<bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+	<!-- DB 인증이 끝난 후 인증된 정보를 담을 객체 -->
+	<bean id="userDetail" class="com.spring.service.CustomUserDetailService"></bean>
+	
+	<!-- /board/* => 권한 체크 -->
+	<!-- <security:http pattern="/board/list" security="none"/> -->
+	
+	<security:http>
+		<!-- <security:intercept-url pattern="/board/*" access="hasAnyRole('ROLE_MEMBER','ROLE_MANAGER','ROLE_ADMIN')"/> -->
+		<security:access-denied-handler ref="deniedHandler"/>
+		<security:form-login login-page="/member/login" authentication-success-handler-ref="loginSuccessHandler"/>
+		<security:logout logout-url="/member/logout" logout-success-url="/" invalidate-session="true"/>
+		<security:remember-me data-source-ref="ds" token-validity-seconds="604800"/>
+	</security:http>
+	
+	<security:authentication-manager>
+		<!-- DB 인증 + 비밀 번호는 암호화 -->
+		<security:authentication-provider user-service-ref="userDetail">
+			<security:password-encoder ref="bcryptPasswordEncoder"/>
+		</security:authentication-provider>
+	</security:authentication-manager>
+	
+</beans>
+
